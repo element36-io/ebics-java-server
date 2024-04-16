@@ -4,18 +4,19 @@
 
 ![Coverage](../.github/badges/jacoco.svg)
 
-Run tests for the ebics-java-client on linux - it mounts sources into a docker container with java and the maven build tool - so you do not need to install java or gradle on your local machine:
+Run tests for the ebics-java-client on linux - it mounts sources into a gradle docker container with java and the maven build tool - so you do not need to install java or gradle on your local machine:
 
     git clone  https://github.com/element36-io/ebics-java-service.git
-    cd ebics-java-service; mkdir ./app;
-    docker run -it -v $PWD:/app -w /app  gradle:6-jdk8-hotspot gradle test
+    cd ebics-java-service
+    docker run -it -v $PWD:/app -w /app  gradle:6-jdk11 gradle clean test
+
 
 On your host machine, test results are stored `./build/reports/tests/test/index.html`, test documents are stored in `./out`. With minimum Java 8 and Maven run tests on your host machine with `gradle test`, again see `./build/reports/tests/test/index.html` for test results.
 
 For test coverage: `./build/reports/jacoco/test/html/index.html`.
 Test for vulnerabilities `gradle dependencyCheckAggregate`- see report in `./build/reports`.
 
-See [here](https://github.com/element36-io/ebics-java-client/blob/master/README.md) how to run tests on ebics-java-client.
+If you are interested in the Ebics Client implementation as well, look [here](https://github.com/element36-io/ebics-java-client/blob/master/README.md).
 
 ## Test API manually
 
