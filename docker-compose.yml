@@ -20,10 +20,10 @@ services:
 
   libeufin: 
     container_name: libeufin
-    #image: e36io/libeufin:hyperfridge
+    image: e36io/libeufin:hyperfridge
     # local dev:
-    build:
-      context: ../LibEuFin
+    # build:
+    #   context: ../LibEuFin
 
     depends_on: 
       - postgres
@@ -67,10 +67,10 @@ services:
       - ./trace:/app/trace:rw
   
   ebics-service: 
-    #image: e36io/ebics-service:updateLibeufin
-    container_name: ebics
-    build: 
-      context: .    
+    image: e36io/ebics-service:hyperfridge
+    # container_name: ebics
+    # build: 
+    #   context: .    
     depends_on: 
       - libeufin
     environment:
@@ -92,10 +92,10 @@ services:
     # profiles:
     #   - dev      
     container_name: fridge
-    #image: e36io/hyperfridge-r0:latest
-    build: 
-      context: /home/w/workspace/hyperfridge-r0
-      dockerfile: ${DOCKERFILE:-DockerfileLinux}   # Default to DockerfileLinux, override with DOCKERFILE environment variable if provided
+    image: e36io/hyperfridge-r0:latest
+    # build: 
+    #   context: /home/w/workspace/hyperfridge-r0
+    #   dockerfile: ${DOCKERFILE:-DockerfileLinux}   # Default to DockerfileLinux, override with DOCKERFILE environment variable if provided
 
     environment:   
       # for watchdog.sh which generates a new proof in /app/out/ as soon as new file ebics file is dedected in /app/in/
