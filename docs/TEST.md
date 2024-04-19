@@ -18,6 +18,27 @@ Test for vulnerabilities `gradle dependencyCheckAggregate`- see report in `./bui
 
 If you are interested in the Ebics Client implementation as well, look [here](https://github.com/element36-io/ebics-java-client/blob/master/README.md).
 
+## Build local images
+
+Checkout [hyperfridge](https://github.com/element36-io/hyperfridge-r0) and [banking backend](https://github.com/element36-io/LibEuFin) at same directory as ebics-java-service to build images locally:
+
+    git clone git@github.com:element36-io/LibEuFin.git
+    cd LibEuFin
+    ./bootstrap
+    cd ..
+    git cline git@github.com:element36-io/XXXXXXX.git
+
+Build on Linux: 
+
+    cd ebics-java-service
+    docker compose build
+
+On Mac: 
+
+    cd ebics-java-service
+    DOCKERFILE=DockerfileMacOs docker compose build
+
+
 ## Test API manually
 
     docker run -p 8093:8093 e36io/ebics-service
