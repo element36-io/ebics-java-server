@@ -1,5 +1,6 @@
 # Tests
 
+
 ## Run unit tests 
 
 ![Coverage](../.github/badges/jacoco.svg)
@@ -7,7 +8,11 @@
 Run tests for the ebics-java-client on linux - it mounts sources into a gradle docker container with java and the maven build tool - so you do not need to install java or gradle on your local machine:
 
     git clone  https://github.com/element36-io/ebics-java-service.git
+    # or git clone git@github.com:element36-io/ebics-java-service.git
+
     cd ebics-java-service
+    # we test on hyperfridge branch
+    git checkout hyperfridge
     docker run -it -v $PWD:/app -w /app  gradle:6-jdk11 gradle clean test
 
 
@@ -18,25 +23,14 @@ Test for vulnerabilities `gradle dependencyCheckAggregate`- see report in `./bui
 
 If you are interested in the Ebics Client implementation as well, look [here](https://github.com/element36-io/ebics-java-client/blob/master/README.md).
 
-# Run with docker 
 
-Checkout [hyperfridge](https://github.com/element36-io/hyperfridge-r0) and [banking backend](https://github.com/element36-io/LibEuFin) at same directory as ebics-java-service to build images locally:
+# Run and test with Docker 
 
-    git clone git@github.com:element36-io/LibEuFin.git
-    cd LibEuFin
-    ./bootstrap
-    cd ..
-    git cline git@github.com:element36-io/XXXXXXX.git
+This starts several docker images: ebics-java-service  => libeufin => Postgres. We use 'watchdog.sh' from the hyperfridge image to scan directory for new banking documents which triggers generation of STARK proofs.  
 
-Build on Linux: 
+    docker compose up
 
-    cd ebics-java-service
-    docker compose build
-
-On Mac: 
-
-    cd ebics-java-service
-    DOCKERFILE=DockerfileMacOs docker compose build
+You should see the setup process of demo-accounts, lauching [Open API/Swagger](http://localhost:8093/ebics/swagger-ui/?url=/ebics/v2/api-docs/) and [banking bankend](manual/manual.md) which we will look at later.
 
 
 ## Test API and download ZK proof

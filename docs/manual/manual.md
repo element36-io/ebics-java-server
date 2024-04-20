@@ -2,7 +2,8 @@
 
 Use OpenAPI/Swagger to crate a payment and doenload the Proof: [http://localhost:8093/ebics/swagger-ui/?url=/ebics/v2/api-do](http://localhost:8093/ebics/swagger-ui/?url=/ebics/v2/api-docs/)
 
-User: 
+Login with: foo/superpassword
+
 ## Create a payment
 
 ![Click Endpoint ](1.png)
