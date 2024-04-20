@@ -28,10 +28,16 @@ If you are interested in the Ebics Client implementation as well, look [here](ht
 
 This starts several docker images: ebics-java-service  => libeufin => Postgres. We use 'watchdog.sh' from the hyperfridge image to scan directory for new banking documents which triggers generation of STARK proofs.  
 
-    docker compose up
+    
+    docker compose pull
+    docker compose up -d
+    # optional
+    docker compose logs -f
 
-You should see the setup process of demo-accounts, lauching [Open API/Swagger](http://localhost:8093/ebics/swagger-ui/?url=/ebics/v2/api-docs/) and [banking bankend](manual/manual.md) which we will look at later.
+Startup will take some time - up to 3 o5 minutes. 
+You should be able to [open Swagger](http://localhost:8093/ebics/swagger-ui/?url=/ebics/v2/api-docs/) and log into [banking bankend](manual/manual.md) which we will look at later.
 
+We tested on MacOs. In case this is not working, you may 
 
 ## Test API and download ZK proof
 
