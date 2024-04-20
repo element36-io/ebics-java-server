@@ -34,10 +34,10 @@ This starts several docker images: ebics-java-service  => libeufin => Postgres. 
     # optional
     docker compose logs -f
 
-Startup will take some time - up to 3 o5 minutes. 
+Startup will take some time - up to 3 or 5 minutes. 
 You should be able to [open Swagger](http://localhost:8093/ebics/swagger-ui/?url=/ebics/v2/api-docs/) and log into [banking bankend](manual/manual.md) which we will look at later.
 
-We tested on MacOs. In case this is not working, you may 
+We tested on MacOs. In case this is not working, you may build images locally, check [here](docker-build.md ). 
 
 ## Test API and download ZK proof
 

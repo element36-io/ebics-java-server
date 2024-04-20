@@ -6,6 +6,8 @@ Clone repos which are necessary into the parent directory of ebics-java-service.
     git clone git@github.com:element36-io/LibEuFin.git
     cd LibEuFin
     git checkout hyperfridge
+    # needed by the LibEuFin framework
+    ./bootstrap
     
 Clone the code which creates STARK proofs: 
 
@@ -13,16 +15,15 @@ Clone the code which creates STARK proofs:
     git clone git@github.com:element36-io/hyperfridge-r0.git
 
 
-Build locally - note speciality for Linux vs. MacOs may take several hours: 
+Build locally (about 1 hour) - note speciality for Linux vs. MacOs:
 
     cd ..
     cd ebics-java-service
-    docker compose -f docker-compose-build.yml -e DOCKERFILE:DockerfileLinux build
+    docker compose -f docker-compose-build.yml build
 
 On MacOs:
 
-    docker compose -f docker-compose-build.yml -e DOCKERFILE:DockerfileMaxOs build
-    
+    docker compose -f docker-compose-build.yml build --build-arg DOCKERFILE="DockerfileMaxOs"
 
 Start container
 
