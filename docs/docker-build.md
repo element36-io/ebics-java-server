@@ -21,14 +21,14 @@ Build locally (about 1 hour) - note speciality for Linux vs. MacOs:
     cd ebics-java-service
     docker compose -f docker-compose-build.yml build
 
-On MacOs:
+On MacOs - also make sure that Docker gets enough ressources: 
 
     docker compose -f docker-compose-build.yml build --build-arg DOCKERFILE="DockerfileMaxOs"
 
 Start container
 
-    docker compouse up -d
-    docker compose logs
+    docker compose -f docker-compose-build.yml up -d
+    docker compose -f docker-compose-build.yml logs -f
 
 
 
