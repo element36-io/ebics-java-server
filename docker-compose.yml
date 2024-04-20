@@ -5,6 +5,7 @@ version: "3.2"
 
 services:
   postgres: 
+    container_name: pg
     image: postgres:11
     restart: always
     environment:
@@ -16,13 +17,14 @@ services:
       # - PGDATA="/var/lib/postgresql/data/pgdata"
    # ports:
      # - "5432:5432"  
-  #volumes:
-      #- ./init-data.sh:/docker-entrypoint-initdb.d/init-data.sh
-      # GCP: - /mnt/stateful_partition/APP/postgres/db:/var/lib/postgresql/data/pgdata
-      # local dir: - ${DATADIR:?}/postgres:/var/lib/postgresql/data
 
   libeufin: 
-    image: e36io/libeufin:mergeLibeufin
+    container_name: libeufin
+    image: e36io/libeufin:hyperfridge
+    # local dev:
+    # build:
+    #   context: ../LibEuFin
+
     depends_on: 
       - postgres
     environment:
@@ -42,14 +44,15 @@ services:
       - POSTGRES_HOST=postgres
       - POSTGRES_DB=libeufindb
       - DANGEROUSLY_DISABLE_HOST_CHECK=true
+    
+      # not used because they are default values
+      # - CLIENT_PR_KEY_OUT=/app/keys/client_private_key.pem
+      # - CLIENT_PUB_KEY_OUT=/app/keys/client_public_key.pem
+      # - BANK_PUB_KEY_OUT=/app/keys/bank_public_key.pem
       
     command: /app/scripts/init_libeufin_sandbox.sh
     tty: true
     stdin_open: true # without this node doesn't start; https://stackoverflow.com/questions/61857267/how-to-make-yarn-start-work-inside-docker-image-with-react-scripts-3-4-and-babel
-    expose:
-      - 5016
-      - 3000
-      - 5000
     ports:
       - "5016:5016" # sandbox 
       - "5001:5000" # nexus
@@ -59,12 +62,15 @@ services:
       - 3000
       - 5001
     volumes:
-      - ./scripts:/app/scripts
+      - ./scripts:/app/scripts:rw
+      - ./keys:/app/keys:rw
+      - ./trace:/app/trace:rw
   
   ebics-service: 
-    #image: e36io/ebics-service:updateLibeufin
-    build: 
-      context: .    
+    image: e36io/ebics-service:hyperfridge
+    # container_name: ebics
+    # build: 
+    #   context: .    
     depends_on: 
       - libeufin
     environment:
@@ -73,8 +79,67 @@ services:
        - LIBEUFIN_NEXUS_URL=http://libeufin:5000
        - LIBEUFIN_SANDBOX_ADMIN_PASSWORD=superpassword
        - LIBEUFIN_SANDBOX_USERNAME=admin
-       - LIBEUFIN_SANDBOX_PASSWORD=superpassword       
+       - LIBEUFIN_SANDBOX_PASSWORD=superpassword
+       - FRIDGE_OUT_DIR=file:/app/work_out/
     ports:
       - "8093:8093"
     expose:
       - 8093      
+    volumes:
+      - recipie-dir:/app/work_out/:rw
+
+  hyperfridge: 
+    # profiles:
+    #   - dev      
+    container_name: fridge
+    image: e36io/hyperfridge-r0:latest
+    # build: 
+    #   context: /home/w/workspace/hyperfridge-r0
+    #   dockerfile: ${DOCKERFILE:-DockerfileLinux}   # Default to DockerfileLinux, override with DOCKERFILE environment variable if provided
+
+    environment:   
+      # for watchdog.sh which generates a new proof in /app/out/ as soon as new file ebics file is dedected in /app/in/
+      - CLIENT_PR_KEY=/app/keys/client_private_key.pem
+      - CLIENT_PUB_KEY=/app/keys/client_public_key.pem
+      - BANK_PUB_KEY=/app/keys/bank_public_key.pem
+      - WITNESS_PUB_KEY=/data/pub_witness.pem
+      - WITNESS_PR_KEY=/data/witness.pem
+      - IN_DIR=/app/in/
+      - WORK_DIR=/app/work/
+      - OUT_DIR=/app/out/
+      - HOST_CMD=/app/host
+    command: /data/watchdog.sh
+    working_dir: /data
+    volumes:
+      - recipie-dir:/app/out/:rw
+      - ./keys/:/app/keys/:ro
+      - ./trace:/app/in:ro
+      # for DEV
+      # - /home/w/workspace/hyperfridge-r0/data/checkResponse.sh:/data/checkResponse.sh
+      # - /home/w/workspace/hyperfridge-r0/data/watchdog.sh:/data/watchdog.sh
+  
+  pgadmin: 
+    profiles:
+      - dev      
+    container_name: dbadmin
+    image: dpage/pgadmin4:7.6
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: root
+      MAX_LOGIN_ATTEMPTS: '15'  # Ensure this is a string, not a number
+      POSTGRES_USER: pgrootuser
+      POSTGRES_PASSWORD: pgrootpassword
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: libeufindb
+      DANGEROUSLY_DISABLE_HOST_CHECK: 'true'  # Ensure this is a string, not a boolean
+
+    depends_on: 
+      - postgres
+    volumes:
+      - /home/w/pgadmin:/var/lib/pgadmin:rw
+    user: root
+    ports:
+      - "53603:53603"
+      - "8081:80" #mapped on w.e36.io:35050; admin@example.com root; add server medi medi medi
+volumes:
+  recipie-dir:      

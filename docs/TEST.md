@@ -1,63 +1,105 @@
 # Tests
 
-## Run unit tests
+## Run unit tests 
 
 ![Coverage](../.github/badges/jacoco.svg)
 
-Run tests for the ebics-java-client on linux - it mounts sources into a docker container with java and the maven build tool - so you do not need to install java or gradle on your local machine:
+Run tests for the ebics-java-client on linux - it mounts sources into a gradle docker container with java and the maven build tool - so you do not need to install java or gradle on your local machine:
 
     git clone  https://github.com/element36-io/ebics-java-service.git
-    cd ebics-java-service; mkdir ./app;
-    docker run -it -v $PWD:/app -w /app  gradle:6-jdk8-hotspot gradle test
+    cd ebics-java-service
+    docker run -it -v $PWD:/app -w /app  gradle:6-jdk11 gradle clean test
+
 
 On your host machine, test results are stored `./build/reports/tests/test/index.html`, test documents are stored in `./out`. With minimum Java 8 and Maven run tests on your host machine with `gradle test`, again see `./build/reports/tests/test/index.html` for test results.
 
 For test coverage: `./build/reports/jacoco/test/html/index.html`.
 Test for vulnerabilities `gradle dependencyCheckAggregate`- see report in `./build/reports`.
 
-See [here](https://github.com/element36-io/ebics-java-client/blob/master/README.md) how to run tests on ebics-java-client.
+If you are interested in the Ebics Client implementation as well, look [here](https://github.com/element36-io/ebics-java-client/blob/master/README.md).
 
-## Test API manually
+# Run with docker 
 
-    docker run -p 8093:8093 e36io/ebics-service
+Checkout [hyperfridge](https://github.com/element36-io/hyperfridge-r0) and [banking backend](https://github.com/element36-io/LibEuFin) at same directory as ebics-java-service to build images locally:
 
-or with existing Ebics configuration
+    git clone git@github.com:element36-io/LibEuFin.git
+    cd LibEuFin
+    ./bootstrap
+    cd ..
+    git cline git@github.com:element36-io/XXXXXXX.git
 
-    docker run -p 8093:8093 -v $HOME/ebics:/root/ebics  e36io/ebics-service
+Build on Linux: 
 
-or with existing Ebics configuration and in production mode
+    cd ebics-java-service
+    docker compose build
 
-    docker run -p 8093:8093 -v $HOME/ebics:/root/ebics --env spring.profiles.active=prod e36io/ebics-service
+On Mac: 
+
+    cd ebics-java-service
+    DOCKERFILE=DockerfileMacOs docker compose build
+
+
+## Test API and download ZK proof
+
+First create a Payment on the banking backend:  
+
+    curl -X 'POST' \
+        'http://localhost:8093/ebics/api-v1/createOrder' \
+        -H 'accept: */*' \
+        -H 'Content-Type: application/json' \
+        -d '{
+            "amount": "123",
+            "clearingSystemMemberId": "HYPLCH22XXX",
+            "currency": "EUR",
+            "msgId": "emtpy",
+            "nationalPayment": true,
+            "ourReference": "empty",
+            "pmtInfId": "empty",
+            "purpose": "0x9A0cab4250613cb8437F06ecdEc64F4644Df4D87",
+            "receipientBankName": "Hypi Lenzburg AG",
+            "receipientCity": "Baar",
+            "receipientCountry": "CH",
+            "receipientIban": "CH1230116000289537313",
+            "receipientName": "element36 AG",
+            "receipientStreet": "Bahnmatt",
+            "receipientStreetNr": "25",
+            "receipientZip": "6340",
+            "sourceBic": "HYPLCH22XXX",
+            "sourceIban": "CH2108307000289537320"
+        }'
+
+Download daily statement which should inluce prior payment and the STARK: 
+
+    curl -X 'GET' \
+        'http://localhost:8093/ebics/api-v1/bankstatements' \
+        -H 'accept: */*' -o result.json
+
+Extract the filename of the proof and download it: 
+
+    PROOF=$(cat result.json | grep \
+    -o '"receiptUrl":"[^"]*"' | cut -d'"' -f4)
+    wget "http://localhost:8093/ebics/$PROOF" -O receipt.json
+
+Verify the proof with the verifier: 
+
+    # we need the image id and the receipt
+    imageid=$(docker run fridge cat /app/IMAGE_ID.hex)
+    docker cp receipt.json fridge:/app/receipt.json 
+    docker exec -it -e RISC0_DEV_MODE=true fridge verifier \
+        verify --imageid-hex="$imageid" --proof-json="/app/receipt.json"
+
+
+## Test API manually with Swagger
 
 Open [Swagger](http://localhost:8093/ebics/swagger-ui/?url=/ebics/v2/api-docs/) in your
-browser and test the API. Ony if you set the image to production mode, it will
-try co connect with your bank. In dev mode it will log its commands and generated
-documents. You may check and download the payment document (ebics document) under `./app`
-which can be tested manually against your bank. To set up and connect to your banks
-Ebics API you need to [switch to productive spring boot
-profile](https://www.baeldung.com/spring-profiles) by using `export spring_profiles_active=prod`.
+browser and test the API and follow instructions [here](manual/manual.md) for a manual test.
 
-### Test  `/ebics/api-v1/simulate'
 
-Create a test transaction - send funds form your bank account to somebody else.
-The result shows the Ebics file generated by the request.
-You may test this file with your bank prior to activating Ebics: Many
-banks offer buld-upload function which read Camt.053 format via web-interface.
+## Login to simulated banking backend UI
 
-Same behaviour in dev and prod environment.
+Open [LibFinEu](http://localhost:3000) in your
+browser with 'foo' and 'superpassword'. 
 
-### Test  `/ebics/api-v1/bankstatements'
+Go to [Activity](http://localhost:3000/activity) and select 'CH2108307000289537320' to see the transations you created before. 
 
-Retrieves bank statement and translates Camt.053 format to Json.
-
-In dev mode you see the command which is issued to query the daily statement.
-
-### Test  `/ebics/api-v1/unpeg'
-
-Create a tarnsaction with your pegging account configured in `ebics.pegging.account`.
-:warning: In prod mode it sends real money - in dev mode it shows the command and the Ebics document in the result.
-
-### Test  `/ebics/api-v1/createOrder'
-
-At your bank you can have more than one bank account. The Ebics interface allows you to access all of them at once:
-Daily statements will cover transactions of all accounts - and you can create new transactions from any bank account from the Ebics interface.
+Note that this is an external component which also can be used to connect to any bank supporting EBICS. It shows that the protocoll is used in a standard way. 

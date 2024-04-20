@@ -8,6 +8,7 @@ import javax.validation.Valid;
 import javax.xml.datatype.DatatypeConfigurationException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -57,7 +58,8 @@ public class EbicsController {
 
   @Autowired GeneratePaymentIds generatePaymentIds;
 
-  @Autowired EbicsStatementService ebicsStatementService;
+  @Autowired 
+  EbicsStatementService ebicsStatementService;
 
   @Autowired EbicsPaymentService ebicsPaymentService;
 
@@ -286,7 +288,9 @@ public class EbicsController {
   + "Anyway you see all Camt.053 files in the configured out folder (ebics.outputDir). "
   + "In dev mode you see the command which is issued to query the daily statement. "
   + "See https://wiki.xmldation.com/General_Information/Payment_Standards/ISO_20022/Bank-to-Customer_Cash_Management "
-  + "for more information about the standard. ")
+  + "for more information about the standard. \n\n"
+  + "Zero-Knowledge-Proofs: The service call will also Risc-Zero receipt and make is accessible via this endpoint, URL is in 'receiptUrl' parameter in the resuling JSON. "
+  + "A 404 indicates that the receipt is not ready yet or if the receipt could not be generated.")
   @GetMapping("/bankstatements")
   public ResponseEntity<List<StatementDTO>> getPayments() {
     log.debug("getStatement ");

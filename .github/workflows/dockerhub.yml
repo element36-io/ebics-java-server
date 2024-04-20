@@ -1,6 +1,6 @@
 on:
   push:
-    branches: [ main ]
+    branches: [ main, hyperfridge ]
 jobs:
   push_to_dockerhub:
     name: build image and push to dockerhub

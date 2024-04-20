@@ -14,7 +14,7 @@ export REGISTERED_BIC=HYPLCH22XXX
 
 export CONNECTION_NAME=testconnection
 export SECRET=backupsecret
-export BACKUP_FILE=/app/backupfile
+export BACKUP_FILE=/app/scripts/backupfile
 export EBICS_USER_ID=e36
 export EBICS_HOST_ID=testhost
 export EBICS_PARTNER_ID=e36
@@ -36,11 +36,12 @@ echo ... start nexus
 libeufin-nexus serve --port 5000 --host 0.0.0.0 &
 
 echo starting sandbox
-libeufin-sandbox serve --port 5016 --auth &
+ libeufin-sandbox serve --port 5016 --auth &
+# libeufin-sandbox serve --port 5016  &
 
-echo check if sandbox is up
+echo "Check if sandbox is up"
 until libeufin-cli sandbox check; do
-  >&2 echo "Sandbox is unavailable - sleeping"
+  echo "Sandbox is unavailable - sleeping" >&2
   sleep 1
 done
 
@@ -54,6 +55,7 @@ if [ ! -f "/app/initdone" ]; then
     libeufin-cli sandbox ebicshost list
 
     echo ... create user $LIBEUFIN_SANDBOX_URL 
+    libeufin-cli sandbox --help
     libeufin-cli sandbox  --sandbox-url $LIBEUFIN_SANDBOX_URL/demobanks/default demobank register
 
 fi
@@ -72,6 +74,7 @@ echo base $EBICS_BASE_URL
 echo hostid $EBICS_HOST_ID
 echo partnerid $EBICS_PARTNER_ID
 echo userid $EBICS_USER_ID
+
 
  #  create sandbox accounts
 if [ ! -f "/app/initdone" ]; then
@@ -110,8 +113,8 @@ if [ ! -f "/app/initdone" ]; then
             --ebics-user-id $EBICS_USER_ID \
             $CONNECTION_NAME
 
-    #  echo ... backup
-    #  libeufin-cli  connections  export-backup --passphrase $SECRET   --output-file $BACKUP_FILE  $CONNECTION_NAME        
+    echo ... backup
+    libeufin-cli  connections  export-backup --passphrase $SECRET   --output-file $BACKUP_FILE  $CONNECTION_NAME        
 
     # This syncronization happens through the INI, HIA, and finally, HPB message types
 
@@ -210,9 +213,6 @@ if [ ! -f "/app/initdone" ]; then
 
 fi
 
-touch /app/initdone
-ls -la /app/initdone
-
 #  install versions according to LibFinEu/frontend/README.md
 
 echo list ebicssubscriber
@@ -225,6 +225,41 @@ libeufin-cli connections list-connections
 echo list show-connection
 libeufin-cli connections show-connection $CONNECTION_NAME  
 
+if [ ! -f "/app/initdone" ]; then
+    apt update --allow-releaseinfo-change
+    apt-get install -y jq qpdf xxd libxml2-utils openssl
+
+    # client_pr_key="${CLIENT_PR_KEY:-/app/scripts/client_private_key.pem}"
+    # client_pub_key="${CLIENT_PUB_KEY:-/app/scripts/client_public_key.pem}"
+    # cat /app/scripts/backupfile | jq -r '.sigBlob' | openssl enc -d -base64 -A | openssl pkcs8 -inform DER -outform PEM -out $client_pr_key  -passin pass:$SECRET
+    # openssl rsa -pubout -in $client_pr_key -out $client_pub_key
+    # echo "client pk exported to $client_pr_key public key to $client_pub_key "
+    client_pr_key=${CLIENT_PR_KEY_OUT:-/app/keys/client_private_key.pem}
+    client_pub_key=${CLIENT_PUB_KEY_OUT:-/app/keys/client_public_key.pem}
+    bank_pub_key=${BANK_PUB_KEY_OUT:-/app/keys/bank_public_key.pem}
+
+    echo "save keys to $client_pr_key $client_pub_key $bank_pub_key "
+    sql="SELECT \"encryptionPrivateKey\" from nexusebicssubscribers s where \"hostID\"='testhost'"
+    # read hex key  | convert to binary | create pem
+    PGPASSWORD=$POSTGRES_PASSWORD psql -d "$POSTGRES_DB" -h "$POSTGRES_HOST" -U "$POSTGRES_USER" -t -c "$sql" | xxd -r -p | openssl pkcs8 -topk8 -nocrypt -inform DER -out $client_pr_key
+    openssl rsa -in $client_pr_key -pubout -out $client_pub_key
+    echo "get bank pub auth key"
+    sql="SELECT \"bankAuthenticationPublicKey\" from nexusebicssubscribers s where \"hostID\"='testhost'"
+    PGPASSWORD=$POSTGRES_PASSWORD psql -d "$POSTGRES_DB" -h "$POSTGRES_HOST" -U "$POSTGRES_USER" -t -c "$sql" | xxd -r -p | openssl rsa -pubin -inform DER -outform PEM -out $bank_pub_key
+    sql="SELECT \"bankEncryptionPublicKey\" from nexusebicssubscribers s where \"hostID\"='testhost'"
+    PGPASSWORD=$POSTGRES_PASSWORD psql -d "$POSTGRES_DB" -h "$POSTGRES_HOST" -U "$POSTGRES_USER" -t -c "$sql" | xxd -r -p | openssl rsa -pubin -inform DER -outform PEM -out $bank_pub_key-enc
+
+    echo "key generation done"
+fi
+
+touch /app/initdone
+ls -la /app/initdone
+
+read -t 10 -p "Setup & startup of nexus and sandbox complete, starting Libeufin react-ui UI on localhost:3000, login with:  $LIBEUFIN_NEXUS_USERNAME $LIBEUFIN_NEXUS_PASSWORD " || true
+#serve -s build
+# /app/scripts/peg100.sh
+# /app/scripts/test1.sh
+echo "...starting yarn"
 echo versions of yarn npm node
 yarn --version
 npm --version 
@@ -234,4 +269,3 @@ cd /app/frontend/
 #read -t 10 -p "Setup & startup of nexus and sandbox complete, starting Libeufin react-ui UI on localhost:3000, login with:  $LIBEUFIN_NEXUS_USERNAME $LIBEUFIN_NEXUS_PASSWORD "
 #serve -s build
 yarn start
-
