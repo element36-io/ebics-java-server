@@ -92,7 +92,7 @@ services:
     container_name: fridge
     # image: e36io/hyperfridge-r0:latest
     build: 
-      context: /home/w/workspace/hyperfridge-r0
+      context: ../hyperfridge-r0
       dockerfile: ${DOCKERFILE:-DockerfileLinux}   # Default to DockerfileLinux, override with DOCKERFILE environment variable if provided
 
     environment:   
