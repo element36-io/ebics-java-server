@@ -1,6 +1,8 @@
 # UI Tests
 
-Use Swagger for API call: 
+Use OpenAPI/Swagger to crate a payment and doenload the Proof: [http://localhost:8093/ebics/swagger-ui/?url=/ebics/v2/api-do](http://localhost:8093/ebics/swagger-ui/?url=/ebics/v2/api-docs/)
+
+Login with: foo/superpassword
 
 ## Create a payment
 
@@ -12,7 +14,6 @@ Hit Execute.
 
 ## Generate Dailay Statement 
 
-
 ![Click Endpoint ](4.png)
 ![Try It ](5.png)
 ![Change Amount ](6.png)
@@ -22,6 +23,5 @@ Note the receiptUrl for later download:
 
 ## Download the proof
 
-Add the value of recieptUrl to 'http://localhost:8093/ebics/':
-
-http://localhost:8093/ebics/receipt_XXXXXXXXXXXX.json
+Replace XYZ with the value of recieptUrl to download the proof:  
+http://localhost:8093/ebics/receipt_XYZ.json
