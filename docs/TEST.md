@@ -1,13 +1,11 @@
 # Tests
 
 
-## Run unit tests 
-
+## Clone repo and run unit tests 
 
 Run tests for the ebics-java-client on linux - it mounts sources into a gradle docker container with java and the maven build tool - so you do not need to install java or gradle on your local machine:
 
-    git clone  https://github.com/element36-io/ebics-java-service.git
-    # or git clone git@github.com:element36-io/ebics-java-service.git
+    git clone git@github.com:element36-io/ebics-java-service.git
 
     cd ebics-java-service
     # we test on hyperfridge branch
