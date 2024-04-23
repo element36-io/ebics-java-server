@@ -3,7 +3,7 @@
 
 ## Clone repo and run unit tests 
 
-Run tests for the ebics-java-client on linux - it mounts sources into a gradle docker container with java and the maven build tool - so you do not need to install java or gradle on your local machine:
+Run tests for the ebics-java-client on linux or MacOs - it mounts sources into a gradle docker container with java and the maven build tool - so you do not need to install java or gradle on your local machine:
 
     git clone git@github.com:element36-io/ebics-java-service.git
 
@@ -16,26 +16,24 @@ Run tests for the ebics-java-client on linux - it mounts sources into a gradle d
 On your host machine, test results are stored `./build/reports/tests/test/index.html`, test artefacts (ebics files) are stored in `./out`. 
 
 If you are interested in the Ebics Client implementation as well, look [here](https://github.com/element36-io/ebics-java-client/blob/master/README.md).
-
+The banking backend is simulated with LibEuFin - look [here](https://github.com/element36-io/LibEuFin). 
 
 # Run and test with Docker 
 
-This starts several docker images: ebics-java-service  => libeufin => Postgres. We use 'watchdog.sh' from the hyperfridge image to scan directory for new banking documents which triggers generation of STARK proofs.  
-
+This starts several docker images: ebics-java-service uses APIs of libeufin which uses Postgres. We use 'watchdog.sh' from the hyperfridge image to scan directory for new banking documents which triggers generation of STARK proofs.  
     
     docker compose pull
     docker compose up -d
     # optional
     docker compose logs -f
 
-Startup will may take a couple of minutes.  
-You should be able to [open Swagger](http://localhost:8093/ebics/swagger-ui/?url=/ebics/v2/api-docs/) and log into [banking bankend](manual/manual.md) with 'foo' and 'superpassword'.
+Startup will may take a couple of minutes. You should be able to [open Swagger](http://localhost:8093/ebics/swagger-ui/?url=/ebics/v2/api-docs/) and log into [banking bankend](manual/manual.md) with 'foo' and 'superpassword'.
 
-We tested on Linux and MacOs, with issues of building the R0 framework on a Macbook PRO M3 in a container. Anyway, starting containers with pre-made images was fine. In case you want to build all images locally, check [here](docker-build.md). 
+We tested on Linux and MacOs, with issues of building the R0 framework on a Macbook PRO M3 in a container. Anyway, starting containers with pre-made images should be fine. In case you want to build all images locally, check [here](docker-build.md). 
 
 ## Test API and download ZK proof
 
-We use 'bash', make sure curl and wget are installed. Versions in comments (from MacOs) are informative - we did not test compatibility with other versions at all: 
+We use 'bash', make sure curl and wget are installed. Versions in comments (from MacOs) are just informative: 
 
 
     wget --version
