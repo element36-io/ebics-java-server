@@ -15,10 +15,7 @@ Run tests for the ebics-java-client on linux - it mounts sources into a gradle d
     docker run -it -v $PWD:/app -w /app  gradle:6-jdk11 gradle clean test
 
 
-On your host machine, test results are stored `./build/reports/tests/test/index.html`, test documents are stored in `./out`. With minimum Java 8 and Maven run tests on your host machine with `gradle test`, again see `./build/reports/tests/test/index.html` for test results.
-
-For test coverage: `./build/reports/jacoco/test/html/index.html`.
-Test for vulnerabilities `gradle dependencyCheckAggregate`- see report in `./build/reports`.
+On your host machine, test results are stored `./build/reports/tests/test/index.html`, test artefacts (ebics files) are stored in `./out`. 
 
 If you are interested in the Ebics Client implementation as well, look [here](https://github.com/element36-io/ebics-java-client/blob/master/README.md).
 
@@ -33,14 +30,25 @@ This starts several docker images: ebics-java-service  => libeufin => Postgres. 
     # optional
     docker compose logs -f
 
-Startup will take some time - up to 3 or 5 minutes. 
-You should be able to [open Swagger](http://localhost:8093/ebics/swagger-ui/?url=/ebics/v2/api-docs/) and log into [banking bankend](manual/manual.md) which we will look at later.
+Startup will may take a couple of minutes.  
+You should be able to [open Swagger](http://localhost:8093/ebics/swagger-ui/?url=/ebics/v2/api-docs/) and log into [banking bankend](manual/manual.md) with 'foo' and 'superpassword'.
 
-We tested on MacOs. In case this is not working, you may build images locally, check [here](docker-build.md ). 
+We tested on Linux and MacOs, with issues of building the R0 framework on a Macbook PRO M3 in a container. Anyway, starting containers with pre-made images was fine. In case you want to build all images locally, check [here](docker-build.md). 
 
 ## Test API and download ZK proof
 
-First create a Payment on the banking backend:  
+We use 'bash', make sure curl and wget are installed. Versions in comments (from MacOs) are informative - we did not test compatibility with other versions at all: 
+
+
+    wget --version
+    # GNU Wget 1.24.5 built on darwin23.2.0.
+    curl --version
+    # curl 8.4.0 (x86_64-apple-darwin23.0) libcurl/8.4.0 (SecureTransport) 
+    # LibreSSL/3.3.6 zlib/1.2.12 nghttp2/1.58.0
+
+
+
+First create a Payment on the banking backend. Expect HTTP status 200 but no output. 
 
     curl -X 'POST' \
         'http://localhost:8093/ebics/api-v1/createOrder' \
@@ -72,21 +80,33 @@ Download daily statement which should inluce prior payment and the STARK:
     curl -X 'GET' \
         'http://localhost:8093/ebics/api-v1/bankstatements' \
         -H 'accept: */*' -o result.json
+    ls result.json
 
-Extract the filename of the proof and download it: 
+
+You should see the output of 'ls result.js'. 
+
+Next we extract the filename of the proof and download it: 
 
     PROOF=$(cat result.json | grep \
     -o '"receiptUrl":"[^"]*"' | cut -d'"' -f4)
     wget "http://localhost:8093/ebics/$PROOF" -O receipt.json
 
-Verify the proof with the verifier: 
+You should see something like '‘receipt.json’ saved [10423/10423]' as output. 
+
+Now verify the proof with the verifier: 
 
     # we need the image id and the receipt
-    imageid=$(docker run fridge cat /app/IMAGE_ID.hex)
-    docker cp receipt.json fridge:/app/receipt.json 
-    docker exec -it -e RISC0_DEV_MODE=true fridge verifier \
+    imageid=$(docker compose run hyperfridge cat /app/IMAGE_ID.hex)
+    docker compose cp receipt.json hyperfridge:/app/receipt.json 
+    docker compose exec -it -e RISC0_DEV_MODE=true hyperfridge verifier \
         verify --imageid-hex="$imageid" --proof-json="/app/receipt.json"
 
+The output start with "Ok": 
+
+    Ok(Commitment { hostinfo: "host:main", iban: "CH4308307000289537312", stmts: [] })
+
+Remark: The empty array for 'stmts' is because we started to work on profing individual transactions. 
+This is not part of the grant but we plan to include if it can be done withing reasonable time.   
 
 ## Test API manually with Swagger
 
