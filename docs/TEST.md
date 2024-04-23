@@ -1,6 +1,5 @@
 # Tests
 
-
 ## Clone repo and run unit tests 
 
 Run tests for the ebics-java-client on linux or MacOs - it mounts sources into a gradle docker container with java and the maven build tool - so you do not need to install java or gradle on your local machine:
