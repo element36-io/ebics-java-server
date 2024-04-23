@@ -106,7 +106,7 @@ This is not part of the grant but we plan to include if it can be done withing r
 
 ## Test API manually with Swagger
 
-Open [Swagger](http://localhost:8093/ebics/swagger-ui/?url=/ebics/v2/api-docs/) in your
+Open [Swagger/OpenAPI](http://localhost:8093/ebics/swagger-ui/?url=/ebics/v2/api-docs/) in your
 browser and test the API and follow instructions [here](manual/manual.md) for a manual test.
 
 
