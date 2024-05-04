@@ -17,19 +17,30 @@ import io.element36.cash36.ebics.service.EbicsStatementService;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
+/**
+ * Reads daily statement of a bank, according to EBICS specification. 
+ * Means that if you call Service once, the backend will mark 
+ * the statements you received. Next time the service is called it 
+ * will only get new data if there are new transactions. 
+ */
 public class EbicsStatementServiceTest {
 
+  // the service to be tested
   @Autowired EbicsStatementService ebicsStatementService;
 
   @Test
   public void testReadBankStatement() throws Exception {
+    // get all non-fetched bank statements, print how many we found
     List<StatementDTO> statement = ebicsStatementService.getBankStatement();
     pp("no. statements: ", statement.size());
-
+    
     assertThat(statement.size()).isBetween(1, 3);
     boolean reachedIn = false;
     boolean reachedOut = false;
+    // go into each statement report
     for (StatementDTO account : statement) {
+      // print the information and check if there 
+      // are incoming and outgoing transactions, otherwise fail. 
       pp(
           "account: ",
           account.getBalanceCL(),
@@ -57,6 +68,8 @@ public class EbicsStatementServiceTest {
         reachedOut = true;
       }
     }
+
+    // check for in and outgoing transactions were found
     assertThat(reachedIn).isTrue();
     assertThat(reachedOut).isTrue();
 

@@ -11,6 +11,7 @@ public class EbicsApplicationTests {
 
   @Test
   public void contextLoads() {
-    // log.debug("ebics.textproxy:{}",TESTPROXY);
+    // Simple test if spring context are loading
+    log.debug("Ebics spring context loaded");
   }
 }

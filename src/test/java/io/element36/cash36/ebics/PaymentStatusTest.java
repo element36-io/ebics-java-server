@@ -22,18 +22,25 @@ import io.element36.cash36.ebics.strategy.PaymentStatus;
 @RunWith(SpringRunner.class)
 @SpringBootTest(properties = {"ebics.mode=proxy"})
 public class PaymentStatusTest {
-
+  // for storing test data
   private static final String TMP_DIR = System.getProperty("java.io.tmpdir") + "/";
 
+  // the service to be tested
   @Autowired PaymentStatus paymentStatus;
 
+
   @Test
+  /** 
+   * We test the paymeentStatus backend with test data of MSG (PAIN file below).
+   */
   public void testLoad() throws Exception {
+
+    // we need to convert the variable to a format which is
+    // typical for ebics and can be processed by the service
 
     File tempFile = File.createTempFile(TMP_DIR + "test", ".xml");
 
     // Writes a string to the above temporary file
-
     Files.write(tempFile.toPath(), MSG.getBytes(StandardCharsets.UTF_8));
     // zip it
     File zipFile = File.createTempFile(TMP_DIR + "test", ".zip");
@@ -41,17 +48,23 @@ public class PaymentStatusTest {
     FileOutputStream fos = new FileOutputStream(zipFile);
     ZipOutputStream zos = new ZipOutputStream(fos);
 
+    // add tempFile to zip
     zos.putNextEntry(new ZipEntry(tempFile.getName()));
 
+    // convert tmepFile to bytes
     byte[] bytes = Files.readAllBytes(Paths.get(tempFile.getAbsolutePath()));
     zos.write(bytes, 0, bytes.length);
     zos.closeEntry();
     zos.close();
 
+    // call the paymentStatus with the ZipFile
     List<PaymentStatusReportDTO> status = paymentStatus.process(zipFile);
     assertThat(status.size()).isEqualTo(1);
   }
 
+  // MSG is a message, actually a PAIN file (payment instruction) - which
+  // is sent to bank backend to trigger a payment. Later this payment (transaction) is 
+  // visible in the bank statement. 
   static final String MSG =
       "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n"
           + "  <Document xmlns=\"http://www.six-interbank-clearing.com/de/pain.002.001.03.ch.02.xsd\">\n"

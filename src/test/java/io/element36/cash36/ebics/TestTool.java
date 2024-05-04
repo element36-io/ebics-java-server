@@ -14,8 +14,13 @@ import java.util.regex.Pattern;
 import io.element36.cash36.ebics.dto.StatementDTO;
 import io.element36.cash36.ebics.dto.TransactionDTO;
 
+/**
+ * Some test tools and test data to generate payments and test methods to check if the 
+ * content of the payments was captured properly by the backend. 
+ */
 public class TestTool {
 
+  /** pp is pretty print; converts an object to String, e.g. for logging and testing */
   public static String pp(Object... objects) {
     String result = "  ";
     if (objects == null) {
@@ -29,20 +34,32 @@ public class TestTool {
   }
 
 
+  /**
+   * Utility function to get a file as a String
+   */
   public static String readLineByLineJava8(String filePath) throws IOException {
 	return new String(Files.readAllBytes(Paths.get(filePath)));
   }
 
+
+  /** Tests statements of a bank acount using its DTO. Overall, this method tests various properties of 
+   * the StatementDTO objects, including balance, IBAN, transaction details, and address lines. 
+   * The assertions ensure that the properties match the expected values, helping to verify the 
+   * correctness of the StatementDTO objects. 
+   * */
   public static void testProxyStatements(List<StatementDTO> statements) {
 	// assertThat(statements.size()).isEqualTo(2);
 	// assertThat(statements.size()).isEqualTo(2);
 
 	StatementDTO statement = statements.get(0);
 
+	// do various test on the data, start with header
 	pp(statement);
 	// check from account
 	assertThat(statement.getBalanceCL()).isEqualTo(new BigDecimal("80097.2"));
 	assertThat(statement.getIban()).isEqualTo("CH4308307000289537312");
+
+	// pick first transaction
 	TransactionDTO tx = statement.getOutgoingTransactions().get(0);
 	assertThat(tx.getCurrency()).isEqualTo("CHF");
 	assertThat(tx.getAmount()).isEqualTo(new BigDecimal("745.25"));
@@ -51,6 +68,7 @@ public class TestTool {
 
 	// tx.getAddrLine().get(0) // VISECA CARD SERVICES S.A.
 
+    // pick second transaction. 
 	statement = statements.get(1);
 	assertThat(statement.getBalanceCL()).isEqualTo(new BigDecimal("110"));
 	assertThat(statement.getIban()).isEqualTo("CH2108307000289537320"); // pegging account
@@ -60,13 +78,18 @@ public class TestTool {
 	assertThat(tx.getAddrLine().get(0)).isEqualTo("element36 AG \nBahnmatt 25 \n6340 Baar");
 }
 
+/**
+ * Utility function to replace the .innerHTML of a tag
+ */
 public static String findAndReplaceTagContent(String tag, String replaceWith, String inputString) {
 	Pattern p = Pattern.compile("<"+tag+">(.+?)</"+tag+">");
 	Matcher matcher = p.matcher(inputString);
 	return matcher.replaceAll("<"+tag+">"+replaceWith+"</"+tag+">");
 }
 
-
+// PAIN file is a payment instruction sent to the bank backend. One is an ingoing, the other an
+// outgoing transaction. Both will be sent to the backend for processing. 
+// We later look if this information is captured in bank statements. 
 public static final String PAIN1="<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
 + "<Document xmlns=\"http://www.six-interbank-clearing.com/de/pain.001.001.03.ch.02.xsd\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.six-interbank-clearing.com/de/pain.001.001.03.ch.02.xsd  pain.001.001.03.ch.02.xsd\">\n"
 + "    <CstmrCdtTrfInitn>\n"
@@ -132,6 +155,9 @@ public static final String PAIN1="<?xml version=\"1.0\" encoding=\"UTF-8\" stand
 + "</Document>\n"
 + "";
 
+
+// PAIN file is a payment instruction sent to the bank backend. We later look if this information 
+// is captured in bank statements. 
 public static final String PAIN2="<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n"
 	+ "<Document xmlns=\"http://www.six-interbank-clearing.com/de/pain.001.001.03.ch.02.xsd\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"http://www.six-interbank-clearing.com/de/pain.001.001.03.ch.02.xsd  pain.001.001.03.ch.02.xsd\">\n"
 	+ "    <CstmrCdtTrfInitn>\n"

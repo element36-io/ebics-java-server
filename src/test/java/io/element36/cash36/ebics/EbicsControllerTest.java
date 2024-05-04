@@ -16,28 +16,35 @@ import io.element36.cash36.ebics.dto.PaymentStatusReportDTO;
 import io.element36.cash36.ebics.dto.StatementDTO;
 
 /**
+ *  Test API call getPayments/ on the controler
+ * 
  *  gradle -x checkstyleMain test --tests io.element36.cash36.ebics.EbicsControllerTest.testGetStatusReport
  */
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
 public class EbicsControllerTest {
-
+  
+  // the service to be tested
   @Autowired EbicsController controller;
 
   @Test
   public void testGetPayments() throws Exception {
 
+    //  testing the getPayments() method of a Spring MVC controller named EbicsController
+
     ResponseEntity<List<StatementDTO>> payments = controller.getPayments();
     assertThat(payments).isNotNull();
     assertThat(payments.getBody()).isNotNull();
-
+    // chedk if payments are found
     assertThat(payments.getBody().size()).isGreaterThan(0);
+    
     for (StatementDTO item : payments.getBody()) {
       System.out.println("-----------------------");
+      // print the statement
       TestTool.pp(item);
     }
-    		// test content
+    // test content
 		TestTool.testProxyStatements(payments.getBody());
   }
 }
