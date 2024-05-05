@@ -9,6 +9,8 @@
 # sudo docker run -v $HOME/ebics:/root/ebics ebics -cp "ebics-cli.jar:lib/*" org.kopi.ebics.client.EbicsClient --sta -o /root/ebics/out sta.txt 
 
 FROM gradle:6-jdk11 AS build
+# with local java and using sdkman
+# sdk use java 11.0.23-tem && sdk use java 11.0.23-tem
 
 # build ebics-client jar and server jars;  
 RUN ls -la; mkdir /app;
