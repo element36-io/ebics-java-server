@@ -12,6 +12,6 @@ public class EbicsApplicationTests {
   @Test
   public void contextLoads() {
     // Simple test if spring context are loading
-    log.debug("Ebics spring context loaded");
+    // log.debug("Ebics spring context loaded");
   }
 }
