@@ -22,6 +22,7 @@ COPY ./src /app/src
 # disable git info
 ENV GENERATE_GIT_PROPERTIES="false"
 WORKDIR /app
+# create spring boot application
 RUN gradle clean build bootJar -DGENERATE_GIT_PROPERTIES=$GENERATE_GIT_PROPERTIES
 
 #create runtime for jars
